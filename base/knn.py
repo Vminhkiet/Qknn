@@ -1,86 +1,42 @@
 import numpy as np
-import collections, base.swaptest, sklearn
+import collections,base.swaptest
+from sklearn import metrics
 
 def encode(xss):
-    """Convert normal vector to normalized state
-
-    Args:
-        xss (list of list): dataset
-
-    Returns:
-        list of list: normalized dataset
-    """
-    amplitudes = np.sqrt(np.einsum('ij,ij->i', xss, xss))
-    amplitudes[amplitudes == 0] = 1
-    normalised_data = xss / amplitudes[:, np.newaxis]
+    amplitudes=np.sqrt(np.einsum('ij,ij->i',xss,xss))
+    amplitudes[amplitudes==0] = 1
+    normalised_data=xss/amplitudes[:,np.newaxis]
     return normalised_data
 def get_major_vote(labels):
-    """Get major label value
+    count=collections.Counter(labels)
+    return count.most_common(1)[0][0]
+def sapxepmangkhoangcach(mangkc):
+    new=sorted(range(len(mangkc)),key=lambda k:mangkc[k])
+    new.reverse()
+    return new
+def laykthaklonnhhat(xs,ys,k):
+    mang=[]
+    i=0
+    for j in ys:
+         if(i<=k):
+            mang.append(xs[j])
+            i=i+1
+         else:
+            break
+    return mang
 
-    Args:
-        labels (list): list of value
-
-    Returns:
-        int: major vote
-    """
-    x = collections.Counter(labels)
-    return x.most_common(1)[0][0]
-
-def sort_return_index(xs):
-    """Note that we must sort for large to small, because scalar product between 
-    two similar vectors is almost 1 (other wise with Eucliean distance), I wrong this
-    point and take few hours to catch this error :))
-
-    Args:
-        xs (list): list of scalar products between train vectors and one test vector
-
-    Returns:
-        list: sorted list but return indices 
-    """
-    new_xs = sorted(range(len(xs)), key=lambda k: xs[k])
-    new_xs.reverse()
-    return new_xs
-
-def get_sublist_with_indices(xs, indices, k):
-    return [xs[index] for index in indices][:k]
-
-def distances(xs, yss, iteration: int = 1):
-    """Return a lots of distance
-
-    Args:
-        - xs (list of float): vector
-        - yss (list of list): dataset
-        - iteration (int): number of iteration
-
-    Returns:
-        - list of values: all distances from vector to others vector in dataset
-    """
-    distances = []
-    for ys in yss:
-        distances.append(base.swaptest.get_fidelity(vector1 = xs, vector2 = ys, iteration = iteration))
+def distances(vector,dataset,iteration: int = 1):
+    distances=[]
+    for i in dataset:
+       distances.append(base.swaptest.do_muc_do(vector1=i,vector2=vector,iteration=iteration))
     return distances
-
-def predict(train_datas, train_labels, test_datas, k: int = 1, iteration: int = 1):
-    """Return predicted labels QKNN algorithm
-
-    Args:
-        - train_datas (numpy array 2D): Vectors in train data
-        - train_labels (numpy array 1D): Labels in train data
-        - test_datas (numpy array 2D): Vectors in test data
-        - k (int): Number of neighboors
-        - iteration (int): number of iteration
-    Returns:
-        - list of int: predicted labels
-    """
-    predict_labels = []
-    i = 0
-    for i, test_data in enumerate(test_datas):
-        xs = distances(test_data, train_datas, iteration)
-        indices_of_sorted_xs = sort_return_index(xs)
-        labels = get_sublist_with_indices(train_labels, indices_of_sorted_xs, k)
-        predict_labels.append(get_major_vote(labels))
-        if i % 10 == 0:
-            print("Progress " + (str(int(i/len(test_datas)*100)) + '%'))
+def predict(traindata,trainlabels,testdatas,k:int=1,iteration:int = 1):
+    predict_labels=[]
+    for test_data in testdatas:
+        kc=distances(test_data,traindata,iteration=iteration)
+        dasapxep=sapxepmangkhoangcach(kc)
+        x=laykthaklonnhhat(trainlabels,dasapxep,k=k)
+        predict_labels.append(get_major_vote(x))
     return predict_labels
 
 def bench_mark(ground_truth, predict):
@@ -93,9 +49,9 @@ def bench_mark(ground_truth, predict):
     Returns:
         - Tuple: benchmark on classifer problem
     """
-    accuracy = sklearn.metrics.accuracy_score(ground_truth, predict)
-    precision = sklearn.metrics.precision_score(ground_truth, predict, average="weighted")
-    recall = sklearn.metrics.recall_score(ground_truth, predict, average="weighted")
-    f1 = sklearn.metrics.f1_score(ground_truth, predict, average="micro")
-    matrix = sklearn.metrics.confusion_matrix(ground_truth, predict)
+    accuracy = metrics.accuracy_score(ground_truth, predict)
+    precision = metrics.precision_score(ground_truth, predict, average="weighted")
+    recall = metrics.recall_score(ground_truth, predict, average="weighted")
+    f1 = metrics.f1_score(ground_truth, predict, average="micro")
+    matrix = metrics.confusion_matrix(ground_truth, predict)
     return accuracy, precision, recall, matrix
